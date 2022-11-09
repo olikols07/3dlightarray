@@ -1,0 +1,36 @@
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+.root {
+  font-family: 'Roboto', sans-serif;
+}
+.edit {
+  color: rgb(255, 255, 255);
+  left: 40px;
+  top: 40px;
+  position: absolute;
+  width: 300px;
+  height: 150px;
+  background-color: rgba(20, 50, 77, 0.411);
+  border-radius: 4px;
+  border: 20px;
+  border-color: rgba(20, 50, 77, 0.7);;
+  z-index: 1;
+}
+#editcontent {
+  padding: 10px;
+}
+input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+#editheader {
+  padding: 10px;
+  cursor: move;
+  z-index: 10;
+  background-color: #00000023;
+}
