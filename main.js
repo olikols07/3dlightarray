@@ -5,8 +5,12 @@ import * as THREE from 'three'
 import Stats from 'three/addons/libs/stats.module.js';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Object3D } from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 
 // initing variables
 
@@ -17,10 +21,11 @@ let diodes, newestSelect, stats;
 
 
 let camera, scene, renderer, controls;
+let composer, outlinePass;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-const selected = new THREE.Group();
+let selected = [];
 
 const edgeGlowParams = {
   edgeStrength: 3.0,
@@ -63,7 +68,7 @@ function init() {
 
     controls.maxDistance = 50 * diodeDepth + (diodeDepth * diodeSize);
     camera.position.set(diodeDepth * diodeSize, diodeDepth * diodeSize, 50 * diodeDepth + (diodeDepth * diodeSize));
-    camera.rotation.set(0,0,0)
+    camera.lookAt(diodeDepth * diodeSize, diodeDepth * diodeSize, (diodeDepth * diodeSize))
     controls.update();
 
     const AmbientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
@@ -81,9 +86,9 @@ function init() {
           LightDiode.position.y = diodeSize * y * 2;
           LightDiode.position.z = diodeSize * z * 2;
           LightDiode.name = (
-            "Diode X: " + (LightDiode.position.x / diodeSize / 2 + 1).toString() +
-            " Y: " + (LightDiode.position.y / diodeSize / 2 + 1).toString() +
-            " Z: " + (LightDiode.position.z / diodeSize / 2 + 1).toString()
+            "Diode X: " + (LightDiode.position.x / diodeSize / 2).toString() +
+            " Y: " + (LightDiode.position.y / diodeSize / 2).toString() +
+            " Z: " + (LightDiode.position.z / diodeSize / 2).toString()
           );
           scene.add(LightDiode);
           diodes.push(LightDiode);
@@ -92,6 +97,17 @@ function init() {
     } 
 
     stats = new Stats();
+    document.body.appendChild( stats.dom );
+    
+    // postprocessing
+
+    composer = new EffectComposer( renderer );
+
+    const renderPass = new RenderPass( scene, camera );
+    composer.addPass( renderPass );
+
+    outlinePass = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
+    composer.addPass( outlinePass );
 
 }
 
@@ -105,9 +121,11 @@ function onMouseMove( event ) {
 function animate()
 {
   requestAnimationFrame( animate )
+  stats.begin();
 	controls.update();
   
   renderer.render( scene, camera );
+  stats.end();
 }
 
 function selectObject() {
@@ -116,8 +134,23 @@ function selectObject() {
   // calculate objects intersecting the picking ray var intersects =     
   let intersects = raycaster.intersectObjects( scene.children ); 
   if(intersects != 0 && intersects.length != scene.children.length - 1 && newestSelect != intersects[0].object.name) {
-    newestSelect = intersects[0].object;
-    onChangeObject()
+    if(window.event.ctrlKey) {
+      if(selected.includes(intersects[0].object)) {
+        return
+      }
+      newestSelect = intersects[0].object;
+      selected.push(newestSelect.name);
+      if(selected.length > 1) {
+        document.getElementById('ObjectName').innerHTML = selected.length.toString() + " Diodes selected";
+      } else {
+        document.getElementById('ObjectName').innerHTML = newestSelect.name + " is selected"
+      }
+    } else {
+      newestSelect = intersects[0].object;
+      selected = [newestSelect.name];
+      document.getElementById('ObjectName').innerHTML = newestSelect.name;
+    }
+    console.log(selected)
   }
 }
 
@@ -130,8 +163,3 @@ function onWindowResize(){
     renderer.setSize( window.innerWidth, window.innerHeight );
 
 }
-function onChangeObject() {
-  selected.add(newestSelect);
-  document.getElementById('ObjectName').innerHTML = newestSelect.name;
-  console.log(selected)
-};
