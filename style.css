@@ -34,3 +34,6 @@ input {
   z-index: 10;
   background-color: #00000023;
 }
+#editheader header {
+  text-align: right;
+}

@@ -2,14 +2,18 @@ import './style.css'
 
 import * as THREE from 'three'
 
+import Stats from 'three/addons/libs/stats.module.js';
+
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Object3D } from 'three';
+
 
 // initing variables
 
 let diodeDepth = 5;
 let diodeSize = 5;
 
-let diodes, newestSelect;
+let diodes, newestSelect, stats;
 
 
 let camera, scene, renderer, controls;
@@ -57,15 +61,13 @@ function init() {
 
     controls = new OrbitControls( camera, renderer.domElement ); 
 
-    // settings for lights
-
     controls.maxDistance = 50 * diodeDepth + (diodeDepth * diodeSize);
     camera.position.set(diodeDepth * diodeSize, diodeDepth * diodeSize, 50 * diodeDepth + (diodeDepth * diodeSize));
     camera.rotation.set(0,0,0)
     controls.update();
 
-    const light = new THREE.AmbientLight( 0x404040 ); // soft white light
-    scene.add( light );
+    const AmbientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+    scene.add( AmbientLight );
 
     for (let x = 0; x < diodeDepth; x++) {
       for (let y = 0; y < diodeDepth; y++) {
@@ -88,6 +90,8 @@ function init() {
         } 
       }
     } 
+
+    stats = new Stats();
 
 }
 
@@ -112,7 +116,7 @@ function selectObject() {
   // calculate objects intersecting the picking ray var intersects =     
   let intersects = raycaster.intersectObjects( scene.children ); 
   if(intersects != 0 && intersects.length != scene.children.length - 1 && newestSelect != intersects[0].object.name) {
-    newestSelect = intersects[0].object.name;
+    newestSelect = intersects[0].object;
     onChangeObject()
   }
 }
@@ -127,10 +131,7 @@ function onWindowResize(){
 
 }
 function onChangeObject() {
-  for(let i = 0; i > scene.children.length; i++) {
-    if(scene.children[i].name == newestSelect){
-      selected.add(scene.children[i])
-      console.log(selected)
-    }
-  }
+  selected.add(newestSelect);
+  document.getElementById('ObjectName').innerHTML = newestSelect.name;
+  console.log(selected)
 };
